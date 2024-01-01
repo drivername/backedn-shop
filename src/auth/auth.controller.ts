@@ -1,7 +1,6 @@
-import { Controller, Req } from '@nestjs/common';
+import { Controller, Req, Res, UseInterceptors } from '@nestjs/common';
 import {
     Body,
- 
     HttpCode,
     HttpStatus,
     Post,
@@ -10,10 +9,13 @@ import {
   
 
   import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
+import { AuthDtoCreateAccount, AuthDtoLogin } from './dto/auth.dto';
 import { Tokens } from './types/token.types';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { Request, Response } from 'express';
+
+
+import { rTGuard } from 'src/common/guard/rT.guard';
 
   
 @Controller('auth')
@@ -21,19 +23,19 @@ export class AuthController {
     constructor(private auth:AuthService){}
 
     @Post('signup')
-    @HttpCode(HttpStatus.CREATED)
-    signupLocal(@Body() dto:AuthDto):Promise<Tokens>{
-     return this.auth.signupLocal(dto)
+   
+    signupLocal(@Body() dto:AuthDtoCreateAccount,@Res({passthrough:true}) res:Response){
+     return this.auth.signupLocal(dto,res)
     }
   
   
     @Post('signin')
-    @HttpCode(HttpStatus.OK)
-    signinLocal(@Body() dto:AuthDto):Promise<Tokens> {
-      return this.auth.signinLocal(dto)
+    login(@Body() dto:AuthDtoLogin,@Res({passthrough:true}) res:Response,@Req() req:Request){
+      return this.auth.login(dto,res,req)
+      
     }
   
-    @UseGuards(AuthGuard('jwt'))
+   
     @Post('logout')
     @HttpCode(HttpStatus.OK)
     logout(@Req() req:Request) {
@@ -44,7 +46,7 @@ export class AuthController {
     }
   
 
-    @UseGuards(AuthGuard('refresh-jwt'))
+    @UseGuards(rTGuard)
     @Post('refresh')
     @HttpCode(HttpStatus.OK)
     refreshTokens(@Req() req:Request) {
