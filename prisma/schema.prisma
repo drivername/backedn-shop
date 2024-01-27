@@ -21,15 +21,13 @@ model User {
   money_on_account Decimal @default(0)
   product Product[]
   commentaboutproduct CommentAboutProduct[]
-  
+  Sender Messages[] @relation("Sender")
+  Receiver Messages[] @relation("Receiver")
 }
-
 model Category{
   id Int @id @default(autoincrement())
   name_of_category String
   product Product[]
- 
-
 }
 
 model Product{
@@ -39,9 +37,10 @@ model Product{
   name_of_product String
   price Decimal
   description String @db.LongText
+  img_url String?
   quantity Int
   owner_id Int
-  user User @relation(fields:[owner_id],references:[id])
+  user User @relation(fields:[owner_id],references:[id],onDelete:Cascade)
   categoryId Int
   category Category @relation(fields:[categoryId],references:[id])
   commentaboutproduct CommentAboutProduct[]
@@ -54,12 +53,20 @@ model CommentAboutProduct{
     content String @db.VarChar(500)
     like Int
     dislike Int
-    product Product @relation(fields:[productId],references:[id])
+    product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
     productId Int
-    author User @relation(fields:[authorId],references:[id])
+    author User @relation(fields:[authorId],references:[id],onDelete:Cascade)
     authorId Int 
-    
-
-
 }
-
+model Messages{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+   topic String
+   
+  
+   sender User @relation("Sender",fields:[senderId], references:[id])
+   senderId Int
+   receiver User @relation("Receiver",fields:[receiverId], references:[id])
+   receiverId Int
+  
+}

@@ -7,9 +7,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { User } from './types/userWhoWantRefreshToken';
+import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class AuthService {
-    constructor(private prisma:PrismaService,private jwt:JwtService,private config:ConfigService){}
+    constructor(private prisma:PrismaClient,private jwt:JwtService,private config:ConfigService){}
    
 async getTokens(userId:number,email:string){
 

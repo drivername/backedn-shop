@@ -1,29 +1,47 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient } from '@prisma/client';
+import { CommentAboutProduct, PrismaClient } from '@prisma/client';
 import { productsPutOnMarket } from './dto/productsPutOnMarketDto';
 import { Request } from 'express';
 import { SearchingProduct } from './dto/searchingProduct';
 import { UpdatedProduct } from './dto/updatedProduct';
 import * as bcrypt from 'bcrypt'
 import { UpdateUser } from './dto/updateUser';
+import { CommentProduct } from './dto/CommentsAboutProduct';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { HttpService } from '@nestjs/axios';
 
 
 @Injectable()
 export class UserService {
-    constructor(private jwt:JwtService,private config:ConfigService,private prisma:PrismaClient){}
+  private readonly s3Client=new S3Client({
+    region:this.config.getOrThrow('AWS_S3_REGION')
+})
+    constructor(private jwt:JwtService,private config:ConfigService,private prisma:PrismaClient,private readonly httpService: HttpService){}
     panelOfUser(req:Request){
       return req.user
       
     }
-    async productOfUser(userId:number){
+    async myProducts(userId:number){
      
         try{
           
           const productsOfUser=await this.prisma.product.findMany({
             where:{
               owner_id:userId
+            },include:{
+              category:{
+                select:{
+                  id:true,
+                  name_of_category:true
+                }
+              },
+              commentaboutproduct:{
+                select:{
+                  content:true
+                }
+              }
             }
           })
           if(!productsOfUser) throw {msg:'can-find-products-of-user',status:403}
@@ -36,31 +54,63 @@ export class UserService {
 
     }
 
-    async putProductsOnMarket(dto:productsPutOnMarket,res:Response,req:Request){
-     
+async myProductDetails(query:any){
+  console.log(query)
+  try{
+    const particularProduct=await this.prisma.product.findFirst({
+      where:{
+        id:Number(query)
+      },include:{
+        category:{
+          select:{
+            id:true,
+            name_of_category:true
+          }
+        }
+      }
+    })
+    if(!particularProduct) throw {msg:'Something wrong with findig particular product',status:403}
+    console.log(particularProduct)
+    return particularProduct
+  }catch(e){
+    throw e
+  }
+}
+
+    async putProductsOnMarket(dto:productsPutOnMarket,res:Response,req:Request,file:any){
+     console.log(dto)
       const user_id=req.user['id']
     
-     
+     const imgUrl=`https://nestjs-sklep.s3.eu-west-2.amazonaws.com/${file.originalname}`
      
       try{
         const putProduct=await this.prisma.product.create({
             data:{
                 name_of_product:dto.name_of_product,
-                price:dto.price,
+                price:Number(dto.price),
                 description:dto.description,
-                quantity:dto.quantity,
+                quantity:Number(dto.quantity),
                 owner_id:user_id,
-                categoryId:dto.category,
+                categoryId:Number(dto.category),
+                img_url:imgUrl
                 
                 
                 
             }
         })
         if(!putProduct)throw new ForbiddenException('something went wrong')
-     
+         await this.s3Client.send(
+          new PutObjectCommand({
+              Bucket:'nestjs-sklep',
+              Key:file.originalname,
+              Body:file.buffer
+          })
+      )
+         
         return {msg:'You update your item on server',status:200}
       }catch(e){
-
+        console.log(e)
+        throw e
       }
     }
 
@@ -75,6 +125,7 @@ export class UserService {
             }
           })
           if(!products)throw {msg:'something-went-wrong',status:403}
+          console.log(products)
           return products
 
         }catch(e){
@@ -188,30 +239,99 @@ export class UserService {
       }
 
     }
-   async searchParticularProduct(dto:{id:number}){
+   async searchParticularProduct(dto:{productId:number}){
     console.log(dto,'what it is?')
     try{
       const findProduct=await this.prisma.product.findUnique({
         where:{
-          id:dto.id
+          id:dto.productId
+        },
+        include:{
+          user:{
+            select:{
+              firstName:true,
+              lastName:true,
+              id:true,
+            }
+          }
         }
       })
       if(!findProduct)throw {msg:'Problem with searching particular product',status:403}
-      console.log(findProduct,'what it is?')
-      const findOwner=await this.prisma.user.findUnique({
+      
+   
+      const findComment=await this.prisma.commentAboutProduct.findMany({
         where:{
-          id:findProduct.owner_id
+          productId:dto.productId
+        },
+        include:{
+          author:{
+            select:{
+              firstName:true,
+              id:true
+            }
+          }
         }
       })
-      if(!findOwner) throw {msg:'Problem with finding owner of product',status:403}
-      return {findProduct,findOwner}
+      if(!findComment)throw {msg:'Something wrong witch searching product',status:403}
+
+      return {findProduct,findComment}
     }catch(e){
       throw e
     }
         
     }
 
-    async addCommentToProduct(){
-      
+    async addCommentToProduct(dto:CommentProduct){
+     console.log(dto.content,'dto')
+    try{
+      const add=await this.prisma.commentAboutProduct.create({
+        data:{
+          updatedAt:dto.updatedAt,
+          content:dto.content,
+          productId:dto.productId,
+          authorId:dto.authorId,
+          dislike:dto.dislike,
+          like:dto.like
+        }
+      })
+      if(!add)throw {msg:'Something wrong with add comment',status:403}
+      return {msg:'Comment added',status:201}
+    }catch(e){
+      throw e
+    }
+    }
+
+    async deleteCommentFromProduct(dto:{commentId:number}){
+      console.log(dto,dto)
+      try{
+        const removeComment=await this.prisma.commentAboutProduct.delete({
+          where:{
+            id:dto.commentId
+          }
+        })
+        if(!removeComment) throw {msg:'Something wrong during removing comment',status:403}
+        return {msg:'Comment Sucessfully deleted',status:200}
+      }catch(e){
+        throw e
+      }
+    }
+    async updateComment(dto:any){
+      console.log(dto.commentId,'id komentarza')
+      try{
+        const update=await this.prisma.commentAboutProduct.update({
+          where:{
+            id:dto.commentId
+          },
+          data:{
+            content:dto.content
+          }
+        })
+        if(!update)throw {msg:'Something wrong with updating comment',status:403}
+        return {msg:'Comment updated sucessfully',status:200}
+      }
+      catch(e){
+        throw e
+      }
+
     }
 }
