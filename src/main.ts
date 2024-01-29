@@ -11,7 +11,10 @@ async function bootstrap() {
     credentials: true, // Allow cookies and credentials (if needed)
   });
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalPipes(new ValidationPipe(
+  {
+  }
+  ))
 
   await app.listen(3001);
 }

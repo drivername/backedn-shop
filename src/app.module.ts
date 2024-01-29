@@ -5,9 +5,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { noCacheMiddleware } from './common/middleware/noCache.middleware';
-import { InteractionModule } from './interaction/interaction.module';
+
 import { HttpModule } from '@nestjs/axios';
 import { ProductModule } from './product/product.module';
+import { CommentsModule } from './comments/comments.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Global()
 @Module({
@@ -16,10 +18,12 @@ import { ProductModule } from './product/product.module';
      AuthModule, 
      PrismaModule,
       UserModule,JwtModule,
-       InteractionModule,
+     
        HttpModule,
-       ProductModule],
-  exports:[JwtModule]
+       ProductModule,
+       CommentsModule],
+  exports:[JwtModule],
+  providers: [ChatGateway]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -62,8 +62,6 @@ model Messages{
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
    topic String
-   
-  
    sender User @relation("Sender",fields:[senderId], references:[id])
    senderId Int
    receiver User @relation("Receiver",fields:[receiverId], references:[id])
