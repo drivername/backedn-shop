@@ -1,4 +1,4 @@
-import { Controller, Get, Header, Req, Res, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Header, Req, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import {
     Body,
     HttpCode,
@@ -18,6 +18,8 @@ import { Request, Response } from 'express';
 import { rTGuard } from 'src/common/guard/rT.guard';
 import { logoutGuard } from 'src/common/guard/logout.guard';
 import { aTGuard } from 'src/common/guard/aT.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadInterceptor } from 'src/common/interceptor/Upload.interceptor';
 
   
 @Controller('auth')
@@ -25,8 +27,11 @@ export class AuthController {
     constructor(private auth:AuthService){}
 
     @Post('signup')
-    signupLocal(@Body() dto:AuthDtoCreateAccount,@Res({passthrough:true}) res:Response){
-     return this.auth.signupLocal(dto,res)
+    @UseInterceptors(FileInterceptor('files'))
+    signupLocal(@UploadedFile() file:any,@Body() dto:AuthDtoCreateAccount,@Res({passthrough:true}) res:Response){
+     console.log(file)
+     return file
+      // return this.auth.signupLocal(dto,res)
     }
   
   
