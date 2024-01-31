@@ -28,7 +28,7 @@ export class ProductController {
     @UseGuards(aTGuard)
     @UseInterceptors(FileInterceptor('file'))
     editProduct(@UploadedFile() file:Express.Multer.File|string,@Body() dto:EditProduct,@Req() req:Request){
-        console.log(file,'what it is file')
+        
         return this.service.editProduct(dto,file)
     }
 
@@ -36,8 +36,7 @@ export class ProductController {
     @UseGuards(aTGuard)
     @UseInterceptors(FileInterceptor('files'))
     putProductsOnMarket(@UploadedFile() file:Express.Multer.File,@Body() dto:productsPutOnMarket,@Req() req:Request,@Res({passthrough:true}) res:Response){
-        console.log(file)
-        console.log(dto)
+       
         return this.service.putProductsOnMarket(dto,res,req,file)
     }
 }

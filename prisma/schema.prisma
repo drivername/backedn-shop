@@ -18,6 +18,7 @@ model User {
   hashedRt String?
   firstName String?
   lastName String?
+  img_url String?
   money_on_account Decimal @default(0)
   product Product[]
   commentaboutproduct CommentAboutProduct[]

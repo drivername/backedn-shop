@@ -22,6 +22,12 @@ export class UserController {
         
     }
 
+    @Get('findParticularUser')
+    findParticularUser(@Query('id') paramId:any){
+        console.log(paramId,'jest to?')
+       return this.userServices.findParticularUser(paramId)
+    }
+
 
 
     @Get('search')

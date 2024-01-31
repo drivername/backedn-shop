@@ -44,7 +44,7 @@ export class ProductService {
     }
 
     async myProductDetails(query:any){
-        console.log(query)
+        
         try{
           const particularProduct=await this.prisma.product.findFirst({
             where:{
@@ -59,14 +59,14 @@ export class ProductService {
             }
           })
           if(!particularProduct) throw {msg:'Something wrong with findig particular product',status:403}
-          console.log(particularProduct)
+         
           return particularProduct
         }catch(e){
           throw e
         }
       }
       async editProduct(dto:EditProduct,file:any){
-        console.log('wykonuje sie to?')
+      
         let img_url=null
         if(file===undefined){
           img_url=dto.actualImg
@@ -107,7 +107,7 @@ export class ProductService {
       }
 
       async putProductsOnMarket(dto:productsPutOnMarket,res:Response,req:Request,file:any){
-        console.log(file)
+       
          const user_id=req['user'].id
         const img_url=`https://nestjs-sklep-1.s3.eu-west-2.amazonaws.com/${file.originalname}`
         await this.s3Client.send(new PutObjectCommand(
@@ -139,7 +139,7 @@ export class ProductService {
             
            return {msg:'You update your item on server',status:200}
          }catch(e){
-           console.log(e)
+          
            throw e
          }
        }
@@ -147,8 +147,5 @@ export class ProductService {
 
 
 
-saveFileOnDysk(){
-
-}
 
 }

@@ -9,7 +9,11 @@ import { noCacheMiddleware } from './common/middleware/noCache.middleware';
 import { HttpModule } from '@nestjs/axios';
 import { ProductModule } from './product/product.module';
 import { CommentsModule } from './comments/comments.module';
-import { ChatGateway } from './chat/chat.gateway';
+import { ChatGateway1 } from './chat/chat.gateway';
+
+
+
+
 
 @Global()
 @Module({
@@ -21,9 +25,11 @@ import { ChatGateway } from './chat/chat.gateway';
      
        HttpModule,
        ProductModule,
-       CommentsModule],
+       CommentsModule,
+     
+       ],
   exports:[JwtModule],
-  providers: [ChatGateway]
+  providers: [ChatGateway1]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

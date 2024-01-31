@@ -17,11 +17,11 @@ async getTokens(userId:number,email:string){
     const payload={sub:userId,email:email}
     const access_token=await this.jwt.signAsync(payload,{
         secret:this.config.get('ACCESS_TOKEN'),
-        expiresIn:60*15
+        expiresIn:60*15*60
     })
     const refresh_token=await this.jwt.signAsync(payload,{
         secret:this.config.get("REFRESH"),
-        expiresIn:60*60})
+        expiresIn:60*60*60*24})
 
         const decode=this.jwt.decode(access_token,{complete:true})
        

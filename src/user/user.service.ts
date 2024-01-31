@@ -23,7 +23,22 @@ export class UserService {
     }
     
 
-
+    async findParticularUser(paramId:any){
+        try{
+          const findUser=await this.prisma.user.findUnique({
+            where:{
+              id:Number(paramId)
+            }
+          })
+          if(!findUser) throw {msg:'Cant find user',status:403}
+          console.log(findUser)
+          return findUser
+        }
+       
+        catch(e){
+          throw e
+        }
+    }
     
 
     async showAllProductsFromShop(){
